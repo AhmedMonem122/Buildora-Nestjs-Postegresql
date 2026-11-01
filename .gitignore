@@ -6,6 +6,9 @@
 # TypeScript build cache
 *.tsbuildinfo
 
+# Prisma generated client (recreated by `prisma generate`)
+/src/generated
+
 # Logs
 logs
 *.log
@@ -21,6 +24,9 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+
+# Vercel
+.vercel
 
 # IDEs and editors
 /.idea
@@ -44,6 +50,7 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+!.env.example
 
 # temp directory
 .temp
@@ -55,5 +62,5 @@ pids
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Diagnostic reports (https://nodejs.org/api/reporting-module.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

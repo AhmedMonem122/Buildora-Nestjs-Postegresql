@@ -1,0 +1,20 @@
+// Buildora database schema.
+//
+// The approved ERD is the source of truth for the data model. Domain models
+// are added incrementally, module by module, and each addition ships with a
+// reviewed migration. Foundation-only models are intentionally not invented
+// before the approved ERD is available.
+//
+// Connection details live in prisma.config.ts (Prisma ORM v7).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

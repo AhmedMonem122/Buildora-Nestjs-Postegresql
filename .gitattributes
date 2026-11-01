@@ -1,0 +1,12 @@
+# Normalise line endings so the project behaves the same on Windows, macOS,
+# and Linux (including CI and Vercel).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
