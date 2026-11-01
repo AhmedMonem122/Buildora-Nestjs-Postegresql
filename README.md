@@ -160,8 +160,10 @@ modules/orders/
 npm install
 ```
 
-`postinstall` runs `prisma generate`. The generated client is written to
-`src/generated/prisma` and is not committed.
+`postinstall` and `prebuild` run `prisma generate`. If your npm version blocks lifecycle
+scripts (npm 11+ can require explicit approval), run `npm run prisma:generate` once before
+starting the API. The generated client is written to `src/generated/prisma` and is not
+committed.
 
 ### 2. Configure the environment
 

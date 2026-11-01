@@ -55,9 +55,10 @@ The baseline `npm run build` and `npm test` both passed before any change.
 | `pug` | 3.x | Server-rendered transactional email templates (requested). |
 | `eslint` + `typescript-eslint` | 10.x / 8.x | Typed linting with strict rules. |
 
-`npm audit` reported 7 vulnerabilities in transitive dependencies at install time
-(2 low, 3 moderate, 2 high). These are tracked for review; no production dependency was
-introduced to work around them.
+`npm audit --omit=dev` reports **0 vulnerabilities** in production dependencies. The full
+audit reports 13 moderate findings in dev-only tooling (a `minimatch` chain reached through
+ESLint and the Nest CLI); these are tracked for upgrade once the upstream packages relax
+their ranges. No production dependency was introduced to work around them.
 
 ## Deployment concerns identified
 
