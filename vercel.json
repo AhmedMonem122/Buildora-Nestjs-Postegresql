@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
-  "installCommand": "npm ci --include=dev --no-audit --no-fund"
+  "installCommand": "npm ci --include=dev --no-audit --no-fund",
+  "buildCommand": "(test -x node_modules/.bin/nest || npm ci --include=dev --no-audit --no-fund) && npm run build"
 }

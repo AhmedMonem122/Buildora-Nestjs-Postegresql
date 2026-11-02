@@ -393,22 +393,25 @@ NestJS's router, so the URL paths your controllers declare are the paths clients
    `DATABASE_URL` and set `DATABASE_POOL_MAX=1`.
 3. Leave **Framework Preset** on *NestJS* (or let Vercel detect it). `vercel.json` pins
    `"framework": "nestjs"` so an older project created as *Other* still uses the preset.
-4. **Do not define `NODE_ENV` in the Vercel project settings.** Vercel sets it
-   automatically for the runtime. Defining it as `production` during the build makes npm
-   omit devDependencies, which removes the `nest` and `prisma` CLIs and breaks the build.
-   `vercel.json` also installs them explicitly with `npm ci --include=dev` as a safeguard.
-5. Run migrations separately before deploying a schema change:
+4. Set `NODE_ENV=production` in the Vercel project (or let Vercel provide it). That is the
+   correct runtime value, but npm also reads it as "omit devDependencies", so the
+   repository `.npmrc` contains `include=dev` and `vercel.json` runs
+   `npm ci --include=dev`. Both keep the `nest`, `typescript`, and `prisma` CLIs available
+   to the build. The build command first checks for `node_modules/.bin/nest` and only
+   reinstalls if it is missing.
+5. Because `NODE_ENV=production` disables Swagger by default and enables strict CORS, set
+   `CORS_ORIGINS` to your real frontend origins (comma-separated).
+6. Run migrations separately before deploying a schema change:
 
    ```bash
    npm run prisma:migrate:deploy
    ```
 
-6. Verify `GET /api/v1/health` and `GET /api/v1/health/ready` after deployment.
+7. Verify `GET /api/v1/health` and `GET /api/v1/health/ready` after deployment.
 
-Do not add a custom `buildCommand`, `outputDirectory`, or catch-all rewrite: the NestJS
-preset owns routing. A hand-written `api/index.js` with a `/(.*)` rewrite sends every
-request to a single function at the rewritten path, which makes NestJS return 404 for the
-real routes.
+Do not add a custom `outputDirectory` or a catch-all rewrite: the NestJS preset owns
+routing. A hand-written `api/index.js` with a `/(.*)` rewrite sends every request to a
+single function at the rewritten path, which makes NestJS return 404 for the real routes.
 
 ### Important serverless constraints
 
