@@ -59,6 +59,9 @@ describe('Health endpoints (e2e)', () => {
       }),
     });
     expect(response.headers['x-request-id']).toMatch(/^[A-Za-z0-9._:-]{8,128}$/);
+    expect(response.headers['ratelimit-limit']).toBe('100');
+    expect(response.headers['ratelimit-remaining']).toBeDefined();
+    expect(response.headers['ratelimit-reset']).toMatch(/^\d+$/);
   });
 
   it('preserves a valid incoming request id', async () => {

@@ -38,7 +38,7 @@ NestJS modules with explicit boundaries. There are no microservices.
 HTTP request
     │
     ▼
-Middleware (request id) ──► Guards (auth, RBAC, throttling)
+Middleware (request id) ──► Guards (rate limit, auth, RBAC)
     │
     ▼
 Controller (transport only) ──► Application service (use cases)
@@ -241,6 +241,8 @@ configuration, so misconfiguration is caught immediately instead of failing late
 | `CORS_ORIGINS` | No | dev origins | Comma-separated allowed origins. Empty in production = same-origin only |
 | `SWAGGER_ENABLED` | No | `true` outside production | Serves Swagger UI and OpenAPI JSON |
 | `LOG_LEVEL` | No | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent` |
+| `RATE_LIMIT_WINDOW_MS` | No | `60000` | Length of the rate-limit window in milliseconds |
+| `RATE_LIMIT_MAX` | No | `100` | Maximum requests per client per window, per route |
 
 Upcoming stages add `JWT_*`, `BREVO_*`, `STRIPE_*`, and `SUPABASE_*` variables. They will
 be documented here when the corresponding module is implemented.
@@ -352,7 +354,11 @@ Implemented in the foundation:
 - Safe error responses; stack traces and database internals are never returned.
 - Prisma parameterized queries (SQL injection protection).
 - Request body size limits.
-- Rate limiting scaffold (`@nestjs/throttler`) with a global guard.
+- Rate limiting with an in-house fixed-window guard (no dependency on the CommonJS
+  `@nestjs/throttler`, which cannot be loaded by ESM-only serverless runtimes). Every response
+  carries `RateLimit-Limit`, `RateLimit-Remaining`, and `RateLimit-Reset`; throttled requests
+  receive `429 TOO_MANY_REQUESTS` with a `Retry-After` header. Routes can override the global
+  budget with `@RateLimit()` or opt out with `@SkipRateLimit()`.
 
 Planned and tracked for later stages:
 
@@ -366,10 +372,12 @@ Planned and tracked for later stages:
 - Private Supabase Storage buckets with signed URLs and upload validation.
 - Audit trails for privileged actions.
 
-> **Rate limiting on Vercel:** `@nestjs/throttler` keeps counters in memory, so limits are
+> **Rate limiting on Vercel:** the limiter keeps counters in process memory, so limits are
 > per function instance. This is acceptable for the MVP but is **not** a distributed rate
 > limiter. Production hardening should use Vercel WAF or a shared store (for example
-> Upstash Redis).
+> Upstash Redis). The guard is dependency-free on purpose: `@nestjs/throttler@6` ships
+> CommonJS and calls `require()` on the ESM-only `@nestjs/common`, which crashes the
+> Vercel runtime with `ERR_REQUIRE_ESM`.
 
 ---
 
@@ -386,8 +394,9 @@ Current coverage focuses on the foundation:
 - Environment validation (defaults, coercion, required secrets, invalid values).
 - Typed configuration mapping and production defaults.
 - Global exception filter (validation errors, Prisma errors, hidden internals, sent headers).
+- Rate-limit service (window reset, limit enforcement, remaining count).
 - Health service (liveness, readiness success/failure).
-- E2E: health endpoints, request-id propagation, standard error envelope.
+- E2E: health endpoints, request-id propagation, rate-limit headers, standard error envelope.
 
 Tests never call real Stripe, Brevo, or Supabase APIs. Provider adapters will be mocked.
 

@@ -21,6 +21,7 @@ describe('configuration', () => {
       'https://admin.buildora.test',
     ]);
     expect(config.swagger.enabled).toBe(true);
+    expect(config.rateLimit).toEqual({ windowMs: 60_000, max: 100 });
   });
 
   it('disables CORS origins and Swagger by default in production', () => {

@@ -49,7 +49,7 @@ The baseline `npm run build` and `npm test` both passed before any change.
 | `@prisma/adapter-pg` + `pg` | 7.10.1 / 8.23.1 | Required PostgreSQL driver adapter for Prisma 7; works with Neon pooling. |
 | `@nestjs/config` | 12.x | Typed configuration and startup validation. |
 | `@nestjs/swagger` | 12.x | OpenAPI document generation. |
-| `@nestjs/throttler` | 6.x | Rate-limiting scaffold. |
+| In-house rate limiter | — | Fixed-window guard; `@nestjs/throttler` was rejected because its CommonJS output calls `require()` on the ESM-only `@nestjs/common` and crashes on Vercel. |
 | `nestjs-pino` + `pino` | 5.x / 10.x | Structured JSON logs and request correlation. |
 | `helmet` | 8.x | Security headers. |
 | `pug` | 3.x | Server-rendered transactional email templates (requested). |
@@ -73,8 +73,8 @@ their ranges. No production dependency was introduced to work around them.
    compiles `src/main.ts` and keeps those semantics, so the project uses it instead of a
    hand-written function entry. Any future change must preserve decorator metadata; a
    plain esbuild bundle without metadata breaks DI at runtime.
-5. **In-memory rate limiting.** `@nestjs/throttler` counters are per instance. Acceptable
-   for the MVP; production should use Vercel WAF or a shared store.
+5. **In-memory rate limiting.** The in-house fixed-window guard keeps counters per
+   instance. Acceptable for the MVP; production should use Vercel WAF or a shared store.
 6. **Pug assets.** Templates must be copied to `dist` by `nest build` and included in the
    Vercel function bundle.
 7. **Migrations.** They must run as an explicit deployment step, never inside a request.

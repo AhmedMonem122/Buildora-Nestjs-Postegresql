@@ -37,12 +37,20 @@ export interface LoggingConfig {
   level: string;
 }
 
+export interface RateLimitConfig {
+  /** Length of the fixed window in milliseconds. */
+  windowMs: number;
+  /** Maximum number of requests per client inside one window. */
+  max: number;
+}
+
 export interface Configuration {
   app: ApplicationConfig;
   http: HttpConfig;
   database: DatabaseConfig;
   swagger: SwaggerConfig;
   logging: LoggingConfig;
+  rateLimit: RateLimitConfig;
 }
 
 const DEVELOPMENT_CORS_ORIGINS = ['http://localhost:3000', 'http://localhost:5173'];
@@ -136,6 +144,10 @@ export function configuration(): Configuration {
     },
     logging: {
       level: readString('LOG_LEVEL', 'info'),
+    },
+    rateLimit: {
+      windowMs: readPositiveInteger('RATE_LIMIT_WINDOW_MS', 60_000),
+      max: readPositiveInteger('RATE_LIMIT_MAX', 100),
     },
   };
 }

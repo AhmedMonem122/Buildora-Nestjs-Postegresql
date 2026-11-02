@@ -87,6 +87,18 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(50)
   DATABASE_POOL_MAX: number = 10;
+
+  /** Length of the rate-limit window in milliseconds. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  RATE_LIMIT_WINDOW_MS: number = 60_000;
+
+  /** Maximum number of requests per client inside one window. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  RATE_LIMIT_MAX: number = 100;
 }
 
 function flattenValidationErrors(errors: ValidationError[], parent = ''): string[] {
