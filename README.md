@@ -198,7 +198,20 @@ npm run start:dev
 - Liveness: `GET /api/v1/health`
 - Readiness: `GET /api/v1/health/ready`
 
-### 5. Quality gates
+### 5. Verify a production build locally
+
+Run the compiled output exactly as production does (`NODE_ENV=production`):
+
+```bash
+npm run start:prod          # requires an existing dist/
+npm run start:prod:build    # build first, then start
+```
+
+`start:prod` uses `cross-env`, so the same command works in PowerShell, cmd, and bash.
+In production mode Swagger is disabled unless `SWAGGER_ENABLED=true`, and `CORS_ORIGINS`
+must list the allowed origins explicitly.
+
+### 6. Quality gates
 
 ```bash
 npm run typecheck
