@@ -390,16 +390,20 @@ Tests never call real Stripe, Brevo, or Supabase APIs. Provider adapters will be
 1. Import the repository into Vercel.
 2. Set the environment variables from the table above. Use the Neon **pooled** URL for
    `DATABASE_URL` and set `DATABASE_POOL_MAX=1`.
-3. `vercel.json` builds the Nest app (`npm run build`) and routes all requests to
+3. **Do not define `NODE_ENV` in the Vercel project settings.** Vercel sets it
+   automatically for the runtime. Defining it as `production` during the build makes npm
+   omit devDependencies, which removes the `nest` and `prisma` CLIs and breaks the build.
+   `vercel.json` explicitly installs them with `npm ci --include=dev` as a safeguard.
+4. `vercel.json` builds the Nest app (`npm run build`) and routes all requests to
    `api/index.js`, which imports the compiled `dist/serverless.js`. The Nest application is
    cached per warm function instance.
-4. Run migrations separately before deploying a schema change:
+5. Run migrations separately before deploying a schema change:
 
    ```bash
    npm run prisma:migrate:deploy
    ```
 
-5. Verify `GET /api/v1/health/ready` after deployment.
+6. Verify `GET /api/v1/health/ready` after deployment.
 
 ### Important serverless constraints
 
