@@ -1,7 +1,9 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { RequestHandler } from 'express';
 import helmet from 'helmet';
+import type { HelmetOptions } from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { REQUEST_ID_HEADER } from '../common/constants/app.constants.js';
 import { requestIdMiddleware } from '../common/middleware/request-id.middleware.js';
@@ -11,6 +13,17 @@ import { setupSwagger } from './swagger.js';
 export interface ApplicationBootstrapOptions {
   enableShutdownHooks?: boolean;
 }
+
+/**
+ * Helmet ships its declarations as a CommonJS module (`index.d.cts`) while its
+ * ESM entry point has no bundled types. Depending on the TypeScript version and
+ * resolver, the default import is typed either as the callable factory or as
+ * the whole module namespace, which breaks `helmet(...)` with TS2349. Pinning
+ * the factory shape keeps the build stable across both resolutions.
+ */
+const helmetFactory = helmet as unknown as (
+  options?: Readonly<HelmetOptions>,
+) => RequestHandler;
 
 /**
  * Shared bootstrap used by both the long-running local server and the Vercel
@@ -32,7 +45,7 @@ export function configureApplication(
   app.use(requestIdMiddleware);
 
   app.use(
-    helmet({
+    helmetFactory({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
