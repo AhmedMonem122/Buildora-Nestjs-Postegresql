@@ -68,9 +68,11 @@ their ranges. No production dependency was introduced to work around them.
    direct connection. `DATABASE_POOL_MAX` should be low (1) on Vercel.
 3. **Prisma Client output.** Prisma 7 generates TypeScript into `src/generated/prisma`.
    It must be generated during install/build and bundled into the function.
-4. **Decorator metadata.** Vercel's esbuild does not emit `emitDecoratorMetadata`, so the
-   function entry imports the pre-compiled `dist/serverless.js` instead of letting Vercel
-   compile Nest source files.
+4. **Decorator metadata.** NestJS dependency injection depends on
+   `emitDecoratorMetadata`. Vercel now ships a zero-configuration NestJS preset that
+   compiles `src/main.ts` and keeps those semantics, so the project uses it instead of a
+   hand-written function entry. Any future change must preserve decorator metadata; a
+   plain esbuild bundle without metadata breaks DI at runtime.
 5. **In-memory rate limiting.** `@nestjs/throttler` counters are per instance. Acceptable
    for the MVP; production should use Vercel WAF or a shared store.
 6. **Pug assets.** Templates must be copied to `dist` by `nest build` and included in the

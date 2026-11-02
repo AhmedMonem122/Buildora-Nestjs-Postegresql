@@ -98,8 +98,6 @@ require a rewrite.
 
 ```
 .
-├── api/
-│   └── index.js                  # Vercel function entry (imports compiled output)
 ├── prisma/
 │   ├── schema.prisma             # Prisma schema (models added per approved ERD)
 │   └── migrations/               # Versioned SQL migrations
@@ -125,8 +123,7 @@ require a rewrite.
 │   │   └── health/               # Liveness + readiness probes
 │   ├── generated/                # Prisma Client (git-ignored, generated at install/build)
 │   ├── app.module.ts
-│   ├── main.ts                   # Long-running local server
-│   └── serverless.ts             # Cached Nest app for Vercel
+│   └── main.ts                   # Server entry point (local + Vercel)
 ├── test/                         # E2E tests
 ├── prisma.config.ts              # Prisma CLI configuration (Prisma 7)
 └── vercel.json
@@ -387,23 +384,31 @@ Tests never call real Stripe, Brevo, or Supabase APIs. Provider adapters will be
 
 ### Vercel
 
+Vercel ships a zero-configuration **NestJS** preset. It detects `src/main.ts`, compiles the
+application, deploys it as a single Fluid-compute function, and forwards every request to
+NestJS's router, so the URL paths your controllers declare are the paths clients call.
+
 1. Import the repository into Vercel.
 2. Set the environment variables from the table above. Use the Neon **pooled** URL for
    `DATABASE_URL` and set `DATABASE_POOL_MAX=1`.
-3. **Do not define `NODE_ENV` in the Vercel project settings.** Vercel sets it
+3. Leave **Framework Preset** on *NestJS* (or let Vercel detect it). `vercel.json` pins
+   `"framework": "nestjs"` so an older project created as *Other* still uses the preset.
+4. **Do not define `NODE_ENV` in the Vercel project settings.** Vercel sets it
    automatically for the runtime. Defining it as `production` during the build makes npm
    omit devDependencies, which removes the `nest` and `prisma` CLIs and breaks the build.
-   `vercel.json` explicitly installs them with `npm ci --include=dev` as a safeguard.
-4. `vercel.json` builds the Nest app (`npm run build`) and routes all requests to
-   `api/index.js`, which imports the compiled `dist/serverless.js`. The Nest application is
-   cached per warm function instance.
+   `vercel.json` also installs them explicitly with `npm ci --include=dev` as a safeguard.
 5. Run migrations separately before deploying a schema change:
 
    ```bash
    npm run prisma:migrate:deploy
    ```
 
-6. Verify `GET /api/v1/health/ready` after deployment.
+6. Verify `GET /api/v1/health` and `GET /api/v1/health/ready` after deployment.
+
+Do not add a custom `buildCommand`, `outputDirectory`, or catch-all rewrite: the NestJS
+preset owns routing. A hand-written `api/index.js` with a `/(.*)` rewrite sends every
+request to a single function at the rewritten path, which makes NestJS return 404 for the
+real routes.
 
 ### Important serverless constraints
 
@@ -416,13 +421,15 @@ Tests never call real Stripe, Brevo, or Supabase APIs. Provider adapters will be
   multiplexing.
 - Prisma Client is generated at install/build time into `src/generated` and bundled into
   the function output.
+- Vercel's NestJS preset compiles `src/main.ts` and routes every request through your
+  NestJS controllers. No WebSocket gateway, no custom `api/` entry, no catch-all rewrite.
 
 ### Pug email templates on Vercel
 
 Email templates live in `src/modules/email/templates/*.pug`. When the email module
-lands, `nest-cli.json` will copy them into `dist` and `vercel.json` includes `dist/**` in
-the function bundle so templates are available at runtime. The email module compiles
-templates once and caches them in memory.
+lands, the templates are read at runtime, so the deployment must include them (for example
+with `includeFiles` on the function) and `nest build` copies them into `dist` for local
+runs. The email module compiles each template once and caches it in memory.
 
 ### Free-tier notes
 
