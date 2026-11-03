@@ -9,6 +9,9 @@
 # Prisma generated client (recreated by `prisma generate`)
 /src/generated
 
+# Swagger UI assets copied from node_modules by the build
+/views/swagger-ui
+
 # Logs
 logs
 *.log

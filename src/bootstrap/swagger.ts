@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { INestApplication } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -5,6 +8,19 @@ import { APP_NAME, APP_VERSION } from '../common/constants/app.constants.js';
 import type { SwaggerConfig } from '../config/configuration.js';
 
 const ACCESS_TOKEN_SCHEME = 'access-token';
+
+/**
+ * `scripts/copy-swagger-assets.mjs` writes the Swagger UI files here during the
+ * build, because Vercel's tracer cannot follow the runtime lookup performed by
+ * `swagger-ui-dist`. The NestJS preset bundles the `views` directory unconditionally.
+ */
+const BUNDLED_SWAGGER_UI_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'views',
+  'swagger-ui',
+);
 
 export function setupSwagger(app: INestApplication, configService: ConfigService): void {
   const swagger = configService.getOrThrow<SwaggerConfig>('swagger');
@@ -49,6 +65,9 @@ export function setupSwagger(app: INestApplication, configService: ConfigService
   const document = SwaggerModule.createDocument(app, documentConfig);
 
   SwaggerModule.setup(swagger.path, app, document, {
+    ...(existsSync(BUNDLED_SWAGGER_UI_PATH)
+      ? { customSwaggerUiPath: BUNDLED_SWAGGER_UI_PATH }
+      : {}),
     jsonDocumentUrl: `${swagger.path}-json`,
     swaggerOptions: {
       persistAuthorization: true,

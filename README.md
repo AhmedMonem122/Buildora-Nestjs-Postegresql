@@ -437,6 +437,12 @@ single function at the rewritten path, which makes NestJS return 404 for the rea
 
 ### Important serverless constraints
 
+- Swagger UI serves its CSS and JavaScript from `swagger-ui-dist`. Vercel's file tracer only
+  bundles the files it can see being `require`d, so `/docs` would return HTML with 404s for
+  every asset and render a blank page. `npm run build` copies the required assets to
+  `views/swagger-ui` (the NestJS preset always bundles `views/**/*`) and `SwaggerModule`
+  serves them from there. Swagger stays disabled in production unless
+  `SWAGGER_ENABLED=true` is set explicitly.
 - No persistent WebSocket gateway. Realtime uses Supabase Realtime channels.
 - No in-memory session storage. Refresh sessions live in PostgreSQL.
 - No in-memory job queue as a production dependency. Background work must use a reliable
